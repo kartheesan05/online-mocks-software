@@ -18,41 +18,41 @@ function VolunteerDashboard() {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/volunteer-login');
-          return;
-        }
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const token = localStorage.getItem('token');
+  //       if (!token) {
+  //         navigate('/volunteer-login');
+  //         return;
+  //       }
 
-        // Create axios instance with default headers
-        const axiosInstance = axios.create({
-          headers: { Authorization: `Bearer ${token}` }
-        });
+  //       // Create axios instance with default headers
+  //       const axiosInstance = axios.create({
+  //         headers: { Authorization: `Bearer ${token}` }
+  //       });
 
-        // Fetch volunteer details
-        const volunteerResponse = await axiosInstance.get('http://localhost:5000/api/volunteer/profile');
-        console.log('Volunteer data:', volunteerResponse.data); // Debug log
-        setVolunteer(volunteerResponse.data);
+  //       // Fetch volunteer details
+  //       const volunteerResponse = await axiosInstance.get('http://localhost:5000/api/volunteer/profile');
+  //       console.log('Volunteer data:', volunteerResponse.data); // Debug log
+  //       setVolunteer(volunteerResponse.data);
 
-        // Fetch allocated HRs
-        const hrsResponse = await axiosInstance.get('http://localhost:5000/api/volunteer/allocated-hrs');
-        setAllocatedHRs(hrsResponse.data);
+  //       // Fetch allocated HRs
+  //       const hrsResponse = await axiosInstance.get('http://localhost:5000/api/volunteer/allocated-hrs');
+  //       setAllocatedHRs(hrsResponse.data);
 
-        setLoading(false);
-      } catch (error) {
-        console.error('Error:', error);
-        if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/volunteer-login');
-        }
-      }
-    };
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //       if (error.response?.status === 401) {
+  //         localStorage.removeItem('token');
+  //         navigate('/volunteer-login');
+  //       }
+  //     }
+  //   };
 
-    fetchData();
-  }, [navigate]);
+  //   fetchData();
+  // }, [navigate]);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -149,13 +149,13 @@ function VolunteerDashboard() {
     navigate('/volunteer-login');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-xl">Loading...</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">

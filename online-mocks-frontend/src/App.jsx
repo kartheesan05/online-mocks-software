@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LandingPage from './components/LandingPage';
+import LandingPage from './components/LandingPage2';
 import HRLogin from './components/HRLogin';
 import VolunteerLogin from './components/VolunteerLogin';
 import VolunteerDashboard from './components/VolunteerDashboard';
@@ -19,9 +19,9 @@ function App() {
         <Route 
           path="/volunteer-dashboard" 
           element={
-            <ProtectedRoute>
+            // <ProtectedRoute>
               <VolunteerDashboard />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           } 
         />
         <Route path="/hr-dashboard" element={<HRDashboard />} />
@@ -29,9 +29,9 @@ function App() {
         <Route 
           path="/admin-dashboard" 
           element={
-            <ProtectedRoute adminRoute={true}>
+            // <ProtectedRoute adminRoute={true}>
               <AdminDashboard />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           } 
         />
         <Route path="/hr-feedback" element={<HRFeedback />} />
