@@ -19,9 +19,9 @@ function App() {
         <Route 
           path="/volunteer-dashboard" 
           element={
-            // <ProtectedRoute>
+            <ProtectedRoute>            
               <VolunteerDashboard />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           } 
         />
         <Route path="/hr-dashboard" element={<HRDashboard />} />
@@ -29,9 +29,9 @@ function App() {
         <Route 
           path="/admin-dashboard" 
           element={
-            // <ProtectedRoute adminRoute={true}>
+            <ProtectedRoute adminRoute={true}>
               <AdminDashboard />
-            // </ProtectedRoute>
+             </ProtectedRoute>
           } 
         />
         <Route path="/hr-feedback" element={<HRFeedback />} />

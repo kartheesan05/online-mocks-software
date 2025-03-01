@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/foresebluelogo.png';
+import api from '../axios/axios';
 
 function AdminLogin() {
   const [credentials, setCredentials] = useState({
@@ -17,14 +18,23 @@ function AdminLogin() {
     setIsLoading(true);
     setError('');
 
-    // Hardcoded admin credentials check
-    if (credentials.username === 'forese' && credentials.password === 'forese2025') {
-      // Store some token or admin flag in localStorage
-      localStorage.setItem('adminToken', 'admin-session');
+    try {
+      const response = await api.post('/api/admin/login', credentials);
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('role', response.data.role);
       navigate('/admin-dashboard');
-    } else {
+    } catch (error) {
       setError('Invalid credentials. Please try again.');
     }
+
+    // Hardcoded admin credentials check
+    // if (credentials.username === 'forese' && credentials.password === 'forese2025') {
+      // Store some token or admin flag in localStorage
+      // localStorage.setItem('adminToken', 'admin-session');
+      // navigate('/admin-dashboard');
+    // } else {
+      // setError('Invalid credentials. Please try again.');
+    // }
     setIsLoading(false);
   };
 
