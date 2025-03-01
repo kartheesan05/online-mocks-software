@@ -128,7 +128,7 @@ function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.clear();
     navigate("/admin-login");
   };
 

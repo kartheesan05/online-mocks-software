@@ -21,11 +21,11 @@ function VolunteerDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/volunteer-login");
-          return;
-        }
+        // const token = localStorage.getItem("token");
+        // if (!token) {
+        //   navigate("/volunteer-login");
+        //   return;
+        // }
 
         // Create axios instance with default headers
         // const axiosInstance = axios.create({
@@ -33,25 +33,17 @@ function VolunteerDashboard() {
         // });
 
         // Fetch volunteer details
-        const volunteerResponse = await api.get(
-          "/api/volunteer/profile"
-        );
+        const volunteerResponse = await api.get("/api/volunteer/profile");
         console.log("Volunteer data:", volunteerResponse.data); // Debug log
         setVolunteer(volunteerResponse.data);
 
         // Fetch allocated HRs
-        const hrsResponse = await api.get(
-          "/api/volunteer/allocated-hrs"
-        );
+        const hrsResponse = await api.get("/api/volunteer/allocated-hrs");
         setAllocatedHRs(hrsResponse.data);
 
         setLoading(false);
       } catch (error) {
         console.error("Error:", error);
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/volunteer-login");
-        }
       }
     };
 
@@ -66,13 +58,7 @@ function VolunteerDashboard() {
       }
 
       try {
-        const token = localStorage.getItem("token");
-        const response = await api.get(
-          `/api/volunteer/students/${selectedHR}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await api.get(`/api/volunteer/students/${selectedHR}`);
         setStudents(response.data);
       } catch (error) {
         console.error("Error fetching students:", error);
@@ -88,26 +74,15 @@ function VolunteerDashboard() {
         alert("Please select an HR first");
         return;
       }
-
-      const token = localStorage.getItem("token");
       console.log("Sending request with:", {
         registerNumber,
         hrId: selectedHR,
       });
 
-      const response = await api.post(
-        "/api/volunteer/add-student",
-        {
-          registerNumber,
-          hrId: selectedHR,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await api.post("/api/volunteer/add-student", {
+        registerNumber,
+        hrId: selectedHR,
+      });
 
       console.log("Add student response:", response.data);
       setStudents((prevStudents) => [...prevStudents, response.data]);
@@ -133,13 +108,9 @@ function VolunteerDashboard() {
 
   const confirmDeallocation = async () => {
     try {
-      const token = localStorage.getItem("token");
       await api.post(
         `/api/volunteer/deallocate-student/${selectedStudent.id}/${selectedHR}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        {}
       );
 
       setStudents((prevStudents) =>
@@ -154,7 +125,7 @@ function VolunteerDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.clear();
     navigate("/volunteer-login");
   };
 
