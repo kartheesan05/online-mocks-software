@@ -315,15 +315,20 @@ function HRDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="mt-4 text-xl text-gray-700 font-medium">
+            Loading...
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-blue-50">
       {/* Enhanced Modern Navbar */}
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-10">
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-md border-b border-gray-200 z-10">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo and Company Section */}
@@ -422,7 +427,7 @@ function HRDashboard() {
 
       {/* Main Content - adjusted top padding to account for new navbar height */}
       <main className="container mx-auto px-6 pt-24 md:pt-28 pb-8">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl shadow-black/10 border border-gray-200 p-8">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
@@ -594,7 +599,7 @@ function HRDashboard() {
                 className="flex justify-between mb-2 md:px-2 hidden"
               >
                 <button
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm flex items-center shadow-sm"
+                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-1.5 rounded-lg text-sm flex items-center shadow-md shadow-black/10 border border-gray-100 transition-all duration-200"
                   onClick={() => {
                     const tableContainer =
                       document.getElementById("table-container");
@@ -604,7 +609,7 @@ function HRDashboard() {
                   }}
                 >
                   <svg
-                    className="w-4 h-4 mr-1"
+                    className="w-4 h-4 mr-1 text-blue-500"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -619,7 +624,7 @@ function HRDashboard() {
                   Scroll Left
                 </button>
                 <button
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm flex items-center shadow-sm"
+                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-1.5 rounded-lg text-sm flex items-center shadow-md shadow-black/10 border border-gray-100 transition-all duration-200"
                   onClick={() => {
                     const tableContainer =
                       document.getElementById("table-container");
@@ -630,7 +635,7 @@ function HRDashboard() {
                 >
                   Scroll Right
                   <svg
-                    className="w-4 h-4 ml-1"
+                    className="w-4 h-4 ml-1 text-blue-500"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -646,7 +651,7 @@ function HRDashboard() {
               </div>
               <div
                 id="table-container"
-                className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm"
+                className="overflow-x-auto rounded-xl border border-gray-200"
                 onScroll={(e) => {
                   const container = e.currentTarget;
                   const scrollControls =

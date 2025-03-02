@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LandingPage from "./components/LandingPage2";
+import LandingPage from "./components/LandingPage";
 import HRLogin from "./components/HRLogin";
 import VolunteerLogin from "./components/VolunteerLogin";
 import VolunteerDashboard from "./components/VolunteerDashboard";
