@@ -22,6 +22,10 @@ const studentSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  resumeLink: {
+    type: String,
+    required: true,
+  },
   allocatedHRs: [
     {
       type: mongoose.Schema.Types.ObjectId,

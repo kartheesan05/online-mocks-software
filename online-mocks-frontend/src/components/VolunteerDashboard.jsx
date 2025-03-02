@@ -16,6 +16,7 @@ function VolunteerDashboard() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [filterOption, setFilterOption] = useState("all");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +60,7 @@ function VolunteerDashboard() {
 
       try {
         const response = await api.get(`/api/volunteer/students/${selectedHR}`);
+        console.log("Fetched students:", response.data);
         setStudents(response.data);
       } catch (error) {
         console.error("Error fetching students:", error);
@@ -101,8 +103,20 @@ function VolunteerDashboard() {
     }
   };
 
-  const handleDeallocateStudent = async (studentId, studentRegNumber) => {
-    setSelectedStudent({ id: studentId, regNumber: studentRegNumber });
+  const handleDeallocateStudent = async (student) => {
+    // Find the student in the students array
+    const studentObj = students.find((s) => s._id === student._id);
+
+    // Check if the student has a personal report from the selected HR
+    if (hasPersonalReport(studentObj)) {
+      setErrorMessage(
+        "Cannot deallocate a student with a completed interview."
+      );
+      setShowErrorModal(true);
+      return;
+    }
+
+    setSelectedStudent({ id: student._id, regNumber: student.registerNumber });
     setShowDeallocateModal(true);
   };
 
@@ -137,6 +151,38 @@ function VolunteerDashboard() {
     );
   }
 
+  // Check if student has a personal report from the selected HR
+  const hasPersonalReport = (student) => {
+    if (!student.personalReport || student.personalReport.length === 0) {
+      return false;
+    }
+
+    return student.personalReport.some((report) => {
+      // Handle both object ID and string formats
+      const reportHrId = report.hrId
+        ? typeof report.hrId === "object"
+          ? report.hrId.toString()
+          : report.hrId
+        : null;
+
+      return reportHrId === selectedHR;
+    });
+  };
+
+  // Filter students based on the selected filter option
+  const filteredStudents = () => {
+    if (!selectedHR) return [];
+
+    switch (filterOption) {
+      case "completed":
+        return students.filter((student) => hasPersonalReport(student));
+      case "notCompleted":
+        return students.filter((student) => !hasPersonalReport(student));
+      default:
+        return students;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Enhanced Header with Gradient */}
@@ -147,6 +193,8 @@ function VolunteerDashboard() {
               src={logo}
               alt="Logo"
               className="h-12 w-auto transform hover:scale-105 transition-transform duration-200"
+              onClick={() => navigate("/")}
+              style={{ cursor: "pointer" }}
             />
           </div>
           <div className="relative">
@@ -261,6 +309,61 @@ function VolunteerDashboard() {
             </button>
           </div>
 
+          {/* Filter Options */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <div className="text-sm text-gray-500">
+                {selectedHR
+                  ? (() => {
+                      const completedCount = students.filter((student) =>
+                        hasPersonalReport(student)
+                      ).length;
+
+                      return `Showing ${filteredStudents().length} of ${
+                        students.length
+                      } students (${completedCount} completed, ${
+                        students.length - completedCount
+                      } pending)`;
+                    })()
+                  : "Please select an HR to view students"}
+              </div>
+            </div>
+
+            {selectedHR && students.length > 0 && (
+              <div className="w-72">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Filter Students
+                </label>
+                <div className="relative">
+                  <select
+                    value={filterOption}
+                    onChange={(e) => setFilterOption(e.target.value)}
+                    className="w-full appearance-none px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 pr-10"
+                  >
+                    <option value="all">All Students</option>
+                    <option value="completed">Completed Students</option>
+                    <option value="notCompleted">Pending Students</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Enhanced Students Table */}
           <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
             <table className="min-w-full divide-y divide-gray-200">
@@ -290,44 +393,62 @@ function VolunteerDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {students.map((student, index) => (
-                  <tr
-                    key={student._id}
-                    className="hover:bg-gray-50 transition-colors duration-150 group"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                      {student.registerNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                      {student.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                      {student.department}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                      {student.aptitudeScore} / 50
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                      {student.gdScore} / 50
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <button
-                        onClick={() =>
-                          handleDeallocateStudent(
-                            student._id,
-                            student.registerNumber
-                          )
-                        }
-                        className="bg-red-500 text-white px-4 py-1.5 rounded-lg hover:bg-red-600 transform hover:-translate-y-0.5 transition-all duration-200"
-                      >
-                        Deallocate
-                      </button>
+                {filteredStudents().length > 0 ? (
+                  filteredStudents().map((student, index) => (
+                    <tr
+                      key={student._id}
+                      className="hover:bg-gray-50 transition-colors duration-150 group"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                        {index + 1}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                        {student.registerNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                        {student.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                        {student.department}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                        {student.aptitudeScore} / 50
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                        {student.gdScore} / 50
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        {hasPersonalReport(student) ? (
+                          <span className="bg-green-100 text-green-800 px-4 py-1.5 rounded-lg font-medium">
+                            Completed
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleDeallocateStudent(student)}
+                            className="bg-red-500 text-white px-4 py-1.5 rounded-lg hover:bg-red-600 transform hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            Deallocate
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="7"
+                      className="px-6 py-8 text-center text-gray-500"
+                    >
+                      {!selectedHR
+                        ? "Please select an HR to view students"
+                        : filterOption === "completed"
+                        ? "No completed students found."
+                        : filterOption === "notCompleted"
+                        ? "All students have been completed."
+                        : "No students allocated to this HR yet."}
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

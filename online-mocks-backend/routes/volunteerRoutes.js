@@ -162,9 +162,12 @@ router.get(
   checkRole(["volunteer"]),
   async (req, res) => {
     try {
+      const hrId = req.params.hrId;
       const students = await Student.find({
-        allocatedHRs: req.params.hrId,
+        allocatedHRs: hrId,
       }).populate("allocatedHRs", "name company");
+
+      // Return the complete student data including personal reports
       res.json(students);
     } catch (error) {
       console.error("Get students error:", error.message);
