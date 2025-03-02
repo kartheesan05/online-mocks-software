@@ -20,6 +20,9 @@ function HRLogin() {
       const response = await api.post("/api/hr/login", credentials);
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("role", response.data.role);
+      localStorage.setItem("hrName", response.data.name);
+      localStorage.setItem("hrCompany", response.data.company);
+      localStorage.setItem("hrId", response.data.id);
       navigate("/hr-dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");

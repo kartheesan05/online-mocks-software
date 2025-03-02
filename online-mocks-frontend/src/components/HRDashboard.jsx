@@ -12,19 +12,36 @@ function HRDashboard() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [reviewData, setReviewData] = useState({
+    professionalAppearanceAndAttitude: "",
+    managerialAptitude: "",
+    generalIntelligenceAndAwareness: "",
+    technicalKnowledge: "",
+    communicationSkills: "",
+    achievementsAndAmbition: "",
+    selfConfidence: "",
+    overallScore: "",
+    strengths: "",
+    pointsToImproveOn: "",
+    comments: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch HR details
-        const hrResponse = await api.get("/api/hr/profile");
-        console.log("HR data:", hrResponse.data); // Debug log
-        setHR(hrResponse.data);
+        const hrName = localStorage.getItem("hrName");
+        const hrCompany = localStorage.getItem("hrCompany");
+        const hrId = localStorage.getItem("hrId");
+        setHR({ name: hrName, company: hrCompany, id: hrId });
 
         // Fetch allocated students
-        const studentsResponse = await api.get("/api/hr/students");
+        const studentsResponse = await api.get("/api/hr/getStudents");
         setStudents(studentsResponse.data);
+        console.log(studentsResponse.data);
 
         setLoading(false);
       } catch (error) {
@@ -38,7 +55,103 @@ function HRDashboard() {
 
   const handleReviewStudent = (student) => {
     setSelectedStudent(student);
+
+    // Check if the HR has already reviewed this student
+    const hrId = localStorage.getItem("hrId");
+    const existingReview = student.personalReport?.find(
+      (report) => {
+        console.log("report", report);
+        console.log("hrId", hrId);
+        console.log("report.hrId", report.hrId);
+        return report.hrId === hrId;
+      }
+    );
+
+    if (existingReview) {
+      // If there's an existing review, load it for editing
+      setIsEditMode(true);
+      setReviewData({
+        professionalAppearanceAndAttitude:
+          existingReview.professionalAppearanceAndAttitude || "",
+        managerialAptitude: existingReview.managerialAptitude || "",
+        generalIntelligenceAndAwareness:
+          existingReview.generalIntelligenceAndAwareness || "",
+        technicalKnowledge: existingReview.technicalKnowledge || "",
+        communicationSkills: existingReview.communicationSkills || "",
+        achievementsAndAmbition: existingReview.achievementsAndAmbition || "",
+        selfConfidence: existingReview.selfConfidence || "",
+        overallScore: existingReview.overallScore || "",
+        strengths: existingReview.strengths || "",
+        pointsToImproveOn: existingReview.pointsToImproveOn || "",
+        comments: existingReview.comments || "",
+      });
+    } else {
+      // If there's no existing review, reset the form
+      setIsEditMode(false);
+      setReviewData({
+        professionalAppearanceAndAttitude: "",
+        managerialAptitude: "",
+        generalIntelligenceAndAwareness: "",
+        technicalKnowledge: "",
+        communicationSkills: "",
+        achievementsAndAmbition: "",
+        selfConfidence: "",
+        overallScore: "",
+        strengths: "",
+        pointsToImproveOn: "",
+        comments: "",
+      });
+    }
+
     setShowReviewModal(true);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setReviewData({
+      ...reviewData,
+      [name]:
+        name.includes("Score") ||
+        name === "professionalAppearanceAndAttitude" ||
+        name === "managerialAptitude" ||
+        name === "generalIntelligenceAndAwareness" ||
+        name === "technicalKnowledge" ||
+        name === "communicationSkills" ||
+        name === "achievementsAndAmbition" ||
+        name === "selfConfidence" ||
+        name === "overallScore"
+          ? Number(value)
+          : value,
+    });
+  };
+
+  const handleSubmitReview = async () => {
+    try {
+      setSubmitting(true);
+      await api.post("/api/hr/personalReport", {
+        registerNumber: selectedStudent.registerNumber,
+        report: reviewData,
+        isEdit: isEditMode,
+      });
+      setShowReviewModal(false);
+      setSubmitting(false);
+      // Refresh student data
+      const studentsResponse = await api.get("/api/hr/getStudents");
+      setStudents(studentsResponse.data);
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Failed to submit review"
+      );
+      setShowErrorModal(true);
+      setSubmitting(false);
+    }
+  };
+
+  // Function to check if the HR has already reviewed a student
+  const hasReviewedStudent = (student) => {
+    const hrId = localStorage.getItem("hrId");
+    return student.personalReport?.some((report) => report.hrId === hrId);
   };
 
   const handleLogout = () => {
@@ -181,9 +294,15 @@ function HRDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                         <button
                           onClick={() => handleReviewStudent(student)}
-                          className="bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transform hover:-translate-y-0.5 transition-all duration-200"
+                          className={`${
+                            hasReviewedStudent(student)
+                              ? "bg-green-500 hover:bg-green-600"
+                              : "bg-blue-500 hover:bg-blue-600"
+                          } text-white px-4 py-1.5 rounded-lg transform hover:-translate-y-0.5 transition-all duration-200`}
                         >
-                          Review
+                          {hasReviewedStudent(student)
+                            ? "Edit Review"
+                            : "Review"}
                         </button>
                       </td>
                     </tr>
@@ -207,13 +326,14 @@ function HRDashboard() {
       {/* Review Student Modal */}
       {showReviewModal && selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 w-[600px] max-h-[80vh] overflow-y-auto transform transition-all duration-200">
+          <div className="bg-white rounded-2xl p-8 w-[800px] max-h-[90vh] overflow-y-auto transform transition-all duration-200">
             <h3 className="text-xl font-semibold text-gray-800 mb-6">
-              Review Student: {selectedStudent.name}
+              {isEditMode ? "Edit Review: " : "Review Student: "}
+              {selectedStudent.name}
             </h3>
 
             <div className="space-y-4 mb-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
                     Register Number
@@ -232,7 +352,7 @@ function HRDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
                     Aptitude Score
@@ -249,17 +369,318 @@ function HRDashboard() {
                 </div>
               </div>
 
-              {/* Add more student details here as needed */}
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="text-lg font-medium text-gray-800 mb-4">
+                  Personal Interview Assessment
+                </h4>
+
+                {/* Rating Fields */}
+                <div className="space-y-6">
+                  {/* Professional Appearance */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Professional Appearance & Attitude
+                      </label>
+                    </div>
+                    <select
+                      name="professionalAppearanceAndAttitude"
+                      value={reviewData.professionalAppearanceAndAttitude}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - All Others</option>
+                      <option value={3}>3 - All Others</option>
+                      <option value={2}>2 - All Others</option>
+                      <option value={1}>1 - All Others</option>
+                    </select>
+                  </div>
+
+                  {/* Managerial Aptitude */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Managerial Aptitude
+                      </label>
+                    </div>
+                    <select
+                      name="managerialAptitude"
+                      value={reviewData.managerialAptitude}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - Below Average</option>
+                      <option value={3}>3 - Below Average</option>
+                      <option value={2}>2 - Below Average</option>
+                      <option value={1}>1 - Below Average</option>
+                    </select>
+                  </div>
+
+                  {/* General Intelligence */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        General Intelligence & Awareness
+                      </label>
+                    </div>
+                    <select
+                      name="generalIntelligenceAndAwareness"
+                      value={reviewData.generalIntelligenceAndAwareness}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - Below Average</option>
+                      <option value={3}>3 - Below Average</option>
+                      <option value={2}>2 - Below Average</option>
+                      <option value={1}>1 - Below Average</option>
+                    </select>
+                  </div>
+
+                  {/* Technical Knowledge */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Technical Knowledge
+                      </label>
+                    </div>
+                    <select
+                      name="technicalKnowledge"
+                      value={reviewData.technicalKnowledge}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - Below Average</option>
+                      <option value={3}>3 - Below Average</option>
+                      <option value={2}>2 - Below Average</option>
+                      <option value={1}>1 - Below Average</option>
+                    </select>
+                  </div>
+
+                  {/* Communication Skills */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Communication Skills
+                      </label>
+                    </div>
+                    <select
+                      name="communicationSkills"
+                      value={reviewData.communicationSkills}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - Below Average</option>
+                      <option value={3}>3 - Below Average</option>
+                      <option value={2}>2 - Below Average</option>
+                      <option value={1}>1 - Below Average</option>
+                    </select>
+                  </div>
+
+                  {/* Achievements & Ambition */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Achievements & Ambition
+                      </label>
+                    </div>
+                    <select
+                      name="achievementsAndAmbition"
+                      value={reviewData.achievementsAndAmbition}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - Below Average</option>
+                      <option value={3}>3 - Below Average</option>
+                      <option value={2}>2 - Below Average</option>
+                      <option value={1}>1 - Below Average</option>
+                    </select>
+                  </div>
+
+                  {/* Self Confidence */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Self Confidence
+                      </label>
+                    </div>
+                    <select
+                      name="selfConfidence"
+                      value={reviewData.selfConfidence}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - Below Average</option>
+                      <option value={3}>3 - Below Average</option>
+                      <option value={2}>2 - Below Average</option>
+                      <option value={1}>1 - Below Average</option>
+                    </select>
+                  </div>
+
+                  {/* Overall Score */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Overall Score
+                      </label>
+                    </div>
+                    <select
+                      name="overallScore"
+                      value={reviewData.overallScore}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Rating --</option>
+                      <option value={10}>10 - Outstanding</option>
+                      <option value={9}>9 - Outstanding</option>
+                      <option value={8}>8 - Above Average</option>
+                      <option value={7}>7 - Above Average</option>
+                      <option value={6}>6 - Above Average</option>
+                      <option value={5}>5 - Average</option>
+                      <option value={4}>4 - Below Average</option>
+                      <option value={3}>3 - Below Average</option>
+                      <option value={2}>2 - Below Average</option>
+                      <option value={1}>1 - Below Average</option>
+                    </select>
+                  </div>
+
+                  {/* Text Fields */}
+                  <div className="space-y-4 mt-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Strengths
+                      </label>
+                      <textarea
+                        name="strengths"
+                        value={reviewData.strengths}
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Student's strengths..."
+                      ></textarea>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Points to Improve On
+                      </label>
+                      <textarea
+                        name="pointsToImproveOn"
+                        value={reviewData.pointsToImproveOn}
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Areas for improvement..."
+                      ></textarea>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Additional Comments
+                      </label>
+                      <textarea
+                        name="comments"
+                        value={reviewData.comments}
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Any additional comments..."
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end space-x-4 mt-8">
               <button
                 onClick={() => setShowReviewModal(false)}
                 className="px-6 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+                disabled={submitting}
               >
-                Close
+                Cancel
               </button>
-              {/* Add more action buttons here if needed */}
+              <button
+                onClick={handleSubmitReview}
+                className="px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors duration-200 flex items-center"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Review"
+                )}
+              </button>
             </div>
           </div>
         </div>
