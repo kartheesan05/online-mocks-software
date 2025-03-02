@@ -20,10 +20,37 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: hr._id, role: "hr" }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: hr._id, role: "hr", company: hr.company, name: hr.name }, process.env.JWT_SECRET);
 
     res.json({ token, role: "hr" });
   } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/getStudents", auth, checkRole(["hr"]), async (req, res) => {
+  try {
+    const students = await Student.find({ allocatedHRs: req.user.id });
+    res.status(200).json(students);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+router.post("/personalReport", auth, checkRole(["hr"]), async (req, res) => {
+  try {
+    const { registerNumber, report } = req.body;
+    const student = await Student.findOne({ registerNumber });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    report.interviewerName = req.user.name;
+    report.interviewerCompany = req.user.company;
+    student.personalReport.push(report);
+    await student.save();
+    res.status(200).json({ message: "Personal report saved successfully" });
+  } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 });

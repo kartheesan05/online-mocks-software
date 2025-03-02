@@ -25,6 +25,47 @@ const studentSchema = new mongoose.Schema({
   allocatedHRs: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'HR'
+  }],
+  personalReport: [{
+    professionalAppearanceAndAttitude: {
+      type: Number
+    },
+    managerialAptitude: {
+      type: Number
+    },
+    generalIntelligenceAndAwareness: {
+      type: Number
+    },
+    technicalKnowledge: {
+      type: Number
+    },
+    communicationSkills: {
+      type: Number
+    },
+    achievementsAndAmbition: {
+      type: Number
+    },
+    selfConfidence: {
+      type: Number
+    },
+    overallScore: {
+      type: Number
+    },
+    strengths: {
+      type: String
+    },
+    pointsToImproveOn: {
+      type: String
+    },
+    comments: {
+      type: String
+    },
+    interviewerName: {
+      type: String
+    },
+    interviewerCompany: {
+      type: String
+    }
   }]
 });
 
