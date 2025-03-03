@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const HR = require("../models/HR");
 const Volunteer = require("../models/Volunteer");
+const Student = require("../models/Student");
 const jwt = require("jsonwebtoken");
 const { checkRole, auth } = require("../middleware/auth");
 // Get all volunteers
@@ -127,23 +128,33 @@ router.post("/allocate", auth, checkRole(["admin"]), async (req, res) => {
 });
 
 // Add these new routes
-router.delete("/delete-volunteer/:id", auth, checkRole(["admin"]), async (req, res) => {
-  try {
-    await Volunteer.findByIdAndDelete(req.params.id);
-    res.json({ message: "Volunteer deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+router.delete(
+  "/delete-volunteer/:id",
+  auth,
+  checkRole(["admin"]),
+  async (req, res) => {
+    try {
+      await Volunteer.findByIdAndDelete(req.params.id);
+      res.json({ message: "Volunteer deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Server Error" });
+    }
   }
-});
+);
 
-router.delete("/delete-hr/:id", auth, checkRole(["admin"]), async (req, res) => {
-  try {
-    await HR.findByIdAndDelete(req.params.id);
-    res.json({ message: "HR deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+router.delete(
+  "/delete-hr/:id",
+  auth,
+  checkRole(["admin"]),
+  async (req, res) => {
+    try {
+      await HR.findByIdAndDelete(req.params.id);
+      res.json({ message: "HR deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Server Error" });
+    }
   }
-});
+);
 
 router.post("/deallocate", auth, checkRole(["admin"]), async (req, res) => {
   try {
@@ -181,5 +192,98 @@ router.post("/deallocate", auth, checkRole(["admin"]), async (req, res) => {
     });
   }
 });
+
+// Get paginated students with allocated HRs
+router.get("/students", auth, checkRole(["admin"]), async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 50;
+    const skip = (page - 1) * limit;
+    const searchTerm = req.query.search || "";
+
+    // First, if searching for HR name, find matching HR IDs
+    let matchingHrIds = [];
+    if (searchTerm) {
+      const matchingHrs = await HR.find({
+        name: { $regex: searchTerm, $options: "i" },
+      }).select("_id");
+      matchingHrIds = matchingHrs.map((hr) => hr._id);
+    }
+
+    // Create search query
+    const searchQuery = {
+      $or: [
+        { name: { $regex: searchTerm, $options: "i" } },
+        { registerNumber: { $regex: searchTerm, $options: "i" } },
+        { allocatedHRs: { $in: matchingHrIds } },
+      ],
+    };
+
+    // Get total count for pagination
+    const totalStudents = await Student.countDocuments(searchQuery);
+
+    // Get students with populated HR data
+    const students = await Student.find(searchQuery)
+      .populate({
+        path: "allocatedHRs",
+        select: "name company _id",
+      })
+      .select(
+        "name registerNumber department aptitudeScore gdScore allocatedHRs personalReport"
+      )
+      .skip(skip)
+      .limit(limit)
+      .sort({ name: 1 });
+
+    res.json({
+      students,
+      totalPages: Math.ceil(totalStudents / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Deallocate HR from student
+router.post(
+  "/deallocate-hr-from-student",
+  auth,
+  checkRole(["admin"]),
+  async (req, res) => {
+    try {
+      const { studentId, hrId } = req.body;
+
+      const student = await Student.findById(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Check if HR has submitted a review
+      const hasReview = student.personalReport.some(
+        (report) => report.hrId.toString() === hrId
+      );
+      if (hasReview) {
+        return res.status(400).json({
+          message:
+            "Cannot deallocate HR as they have already submitted a review",
+        });
+      }
+
+      // Remove HR from student's allocatedHRs
+      student.allocatedHRs = student.allocatedHRs.filter(
+        (allocatedHrId) => allocatedHrId.toString() !== hrId
+      );
+
+      await student.save();
+
+      res.json({ message: "HR deallocated successfully from student" });
+    } catch (error) {
+      console.error("Error deallocating HR from student:", error);
+      res.status(500).json({ message: "Server Error" });
+    }
+  }
+);
 
 module.exports = router;

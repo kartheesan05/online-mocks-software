@@ -33,7 +33,12 @@ function AdminLogin() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Logo Section */}
       <div className="mb-8">
-        <img src={logo} alt="Logo" className="h-16 w-auto" />
+        <img
+          onClick={() => navigate("/")}
+          src={logo}
+          alt="Logo"
+          className="h-16 w-auto"
+        />
       </div>
 
       <div className="bg-white p-8 rounded-2xl shadow-xl w-96 space-y-8">

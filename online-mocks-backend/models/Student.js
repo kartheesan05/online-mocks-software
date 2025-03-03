@@ -24,7 +24,6 @@ const studentSchema = new mongoose.Schema({
   },
   resumeLink: {
     type: String,
-    required: true,
   },
   allocatedHRs: [
     {

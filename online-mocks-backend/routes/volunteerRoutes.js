@@ -133,6 +133,13 @@ router.post(
         });
       }
 
+      // Check if student already has 2 or more HRs allocated
+      if (student.allocatedHRs.length >= 2) {
+        return res.status(400).json({
+          message: "Student cannot be allocated to more than 2 HRs",
+        });
+      }
+
       // Add HR to student's allocations
       student.allocatedHRs.push(hrId);
       await student.save();

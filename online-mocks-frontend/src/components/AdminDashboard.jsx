@@ -10,6 +10,9 @@ function AdminDashboard() {
   const [showLogout, setShowLogout] = useState(false);
   const [volunteers, setVolunteers] = useState([]);
   const [hrs, setHRs] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [newEntry, setNewEntry] = useState({
     name: "",
     username: "",
@@ -28,17 +31,25 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTab, currentPage, searchTerm]);
 
   const fetchData = async () => {
     try {
-      const [volunteersRes, hrsRes] = await Promise.all([
-        api.get("/api/admin/volunteers"),
-        api.get("/api/admin/hrs"),
-      ]);
-      setVolunteers(volunteersRes.data);
-      console.log("HRs data:", hrsRes.data);
-      setHRs(hrsRes.data);
+      if (activeTab === "students") {
+        const response = await api.get(
+          `/api/admin/students?page=${currentPage}&search=${searchTerm}`
+        );
+        setStudents(response.data.students);
+        setTotalPages(response.data.totalPages);
+        setCurrentPage(response.data.currentPage);
+      } else {
+        const [volunteersRes, hrsRes] = await Promise.all([
+          api.get("/api/admin/volunteers"),
+          api.get("/api/admin/hrs"),
+        ]);
+        setVolunteers(volunteersRes.data);
+        setHRs(hrsRes.data);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -141,6 +152,27 @@ function AdminDashboard() {
     }
   };
 
+  const handleDeallocateHRFromStudent = async (studentId, hrId, hrName) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to deallocate HR "${hrName}" from this student?`
+    );
+
+    if (isConfirmed) {
+      try {
+        await api.post("/api/admin/deallocate-hr-from-student", {
+          studentId,
+          hrId,
+        });
+        fetchData(); // Refresh the data
+      } catch (error) {
+        console.error("Error deallocating HR from student:", error);
+        alert(
+          error.response?.data?.message || "Error deallocating HR from student"
+        );
+      }
+    }
+  };
+
   const filteredAndSortedHRs = hrs
     .filter((hr) => {
       const matchesSearch =
@@ -240,32 +272,53 @@ function AdminDashboard() {
           >
             HRs
           </button>
+          <button
+            onClick={() => setActiveTab("students")}
+            className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+              activeTab === "students"
+                ? "bg-purple-500 text-white shadow-md"
+                : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            Students
+          </button>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between mb-8">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200"
-          >
-            Add {activeTab === "volunteers" ? "Volunteer" : "HR"}
-          </button>
-          <button
-            onClick={() => setShowAllocationModal(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200"
-          >
-            Allocate Volunteer to HR
-          </button>
-        </div>
+        {activeTab !== "students" && (
+          <div className="flex justify-between mb-8">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200"
+            >
+              Add {activeTab === "volunteers" ? "Volunteer" : "HR"}
+            </button>
+            <button
+              onClick={() => setShowAllocationModal(true)}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200"
+            >
+              Allocate Volunteer to HR
+            </button>
+          </div>
+        )}
 
         {/* Search and Filter */}
         <div className="mb-6 flex flex-wrap gap-4 items-center">
           <div className="flex-1 min-w-[200px]">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={`Search ${
+                activeTab === "students"
+                  ? "students by name or allocated HR..."
+                  : "..."
+              }`}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                if (activeTab === "students") {
+                  setCurrentPage(1); // Reset to first page when searching
+                }
+              }}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
@@ -288,7 +341,28 @@ function AdminDashboard() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gradient-to-r from-purple-500 to-purple-600">
               <tr>
-                {activeTab === "volunteers" ? (
+                {activeTab === "students" ? (
+                  <>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Register Number
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Department
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Aptitude Score
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      GD Score
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Allocated HRs
+                    </th>
+                  </>
+                ) : activeTab === "volunteers" ? (
                   <>
                     <th
                       onClick={() => handleSort("name")}
@@ -339,7 +413,72 @@ function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {activeTab === "volunteers"
+              {activeTab === "students"
+                ? students.map((student) => (
+                    <tr
+                      key={student._id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {student.registerNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {student.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {student.department}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {student.aptitudeScore}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {student.gdScore}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {student.allocatedHRs &&
+                        student.allocatedHRs.length > 0 ? (
+                          <div className="space-y-2">
+                            {student.allocatedHRs.map((hr) => (
+                              <div
+                                key={hr._id}
+                                className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
+                              >
+                                <span>
+                                  {hr.name} ({hr.company})
+                                </span>
+                                {student.personalReport.some(
+                                  (report) =>
+                                    report.hrId.toString() === hr._id.toString()
+                                ) ? (
+                                  <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">
+                                    Reviewed
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      handleDeallocateHRFromStudent(
+                                        student._id,
+                                        hr._id,
+                                        hr.name
+                                      )
+                                    }
+                                    className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-2 py-1 rounded-md text-xs transition-colors duration-150"
+                                  >
+                                    Deallocate
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            No HRs allocated
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                : activeTab === "volunteers"
                 ? filteredAndSortedVolunteers.map((volunteer) => (
                     <tr
                       key={volunteer._id}
@@ -422,6 +561,39 @@ function AdminDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {activeTab === "students" && (
+          <div className="mt-6 flex justify-center space-x-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === 1
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-purple-500 text-white hover:bg-purple-600"
+              }`}
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2 text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === totalPages
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-purple-500 text-white hover:bg-purple-600"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Add Modal */}

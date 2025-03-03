@@ -35,7 +35,12 @@ function HRLogin() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-blue-50 px-4">
       {/* Logo Section */}
       <div className="mb-10 animate-fade-in">
-        <img src={logo} alt="Logo" className="h-20 w-auto drop-shadow-md" />
+        <img
+          onClick={() => navigate("/")}
+          src={logo}
+          alt="Logo"
+          className="h-20 w-auto drop-shadow-md"
+        />
       </div>
 
       <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md space-y-8 border border-gray-100 transition-all duration-300 hover:shadow-xl">
