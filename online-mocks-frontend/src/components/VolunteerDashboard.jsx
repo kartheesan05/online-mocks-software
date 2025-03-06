@@ -227,7 +227,7 @@ function VolunteerDashboard() {
             </div>
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -241,30 +241,30 @@ function VolunteerDashboard() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">S.No</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Register Number</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Department</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aptitude Score</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">GD Score</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Score</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">S.No</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Register Number</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Department</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Aptitude Score (out of 50)</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">GD Score (out of 50)</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {students.map((student, index) => (
                   <tr key={student._id} 
                       className="hover:bg-gray-50 transition-colors duration-150 group">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.registerNumber}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.department}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.aptitudeScore}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{student.gdScore}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {student.aptitudeScore + student.gdScore}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">{index + 1}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{student.registerNumber}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{student.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{student.department}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                      {student.aptitudeScore} / 50
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                      {student.gdScore} / 50
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
                         onClick={() => handleDeallocateStudent(student._id, student.registerNumber)}
                         className="bg-red-500 text-white px-4 py-1.5 rounded-lg hover:bg-red-600 transform hover:-translate-y-0.5 transition-all duration-200"

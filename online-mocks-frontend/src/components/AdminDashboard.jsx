@@ -19,6 +19,12 @@ function AdminDashboard() {
   const [selectedVolunteer, setSelectedVolunteer] = useState('');
   const [selectedHR, setSelectedHR] = useState('');
   const [showAllocationModal, setShowAllocationModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'allocated', 'not-allocated'
+  const [volunteerSearch, setVolunteerSearch] = useState('');
+  const [hrSearch, setHrSearch] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -122,6 +128,48 @@ function AdminDashboard() {
     navigate('/admin-login');
   };
 
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const filteredAndSortedHRs = hrs
+    .filter(hr => {
+      const matchesSearch = (
+        hr.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        hr.company.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      if (filterStatus === 'all') return matchesSearch;
+      if (filterStatus === 'allocated') return matchesSearch && hr.allocatedVolunteers.length > 0;
+      if (filterStatus === 'not-allocated') return matchesSearch && hr.allocatedVolunteers.length === 0;
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      const aValue = a[sortField]?.toLowerCase() || '';
+      const bValue = b[sortField]?.toLowerCase() || '';
+      return sortOrder === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    });
+
+  const filteredAndSortedVolunteers = volunteers
+    .filter(volunteer => 
+      volunteer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      volunteer.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const aValue = a[sortField]?.toLowerCase() || '';
+      const bValue = b[sortField]?.toLowerCase() || '';
+      return sortOrder === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
@@ -194,6 +242,31 @@ function AdminDashboard() {
           </button>
         </div>
 
+        {/* Search and Filter */}
+        <div className="mb-6 flex flex-wrap gap-4 items-center">
+          <div className="flex-1 min-w-[200px]">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+          
+          {activeTab === 'hrs' && (
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="all">All HRs</option>
+              <option value="allocated">Allocated</option>
+              <option value="not-allocated">Not Allocated</option>
+            </select>
+          )}
+        </div>
+
         {/* Data Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mt-6">
           <table className="min-w-full divide-y divide-gray-200">
@@ -201,23 +274,49 @@ function AdminDashboard() {
               <tr>
                 {activeTab === 'volunteers' ? (
                   <>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Username</th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                    <th 
+                      onClick={() => handleSort('name')}
+                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                    >
+                      Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th 
+                      onClick={() => handleSort('username')}
+                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                    >
+                      Username {sortField === 'username' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                      Actions
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Company</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Allocated Volunteers</th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                    <th 
+                      onClick={() => handleSort('name')}
+                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                    >
+                      Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th 
+                      onClick={() => handleSort('company')}
+                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                    >
+                      Company {sortField === 'company' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Allocated Volunteers
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                      Actions
+                    </th>
                   </>
                 )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {activeTab === 'volunteers' ? (
-                volunteers.map((volunteer) => (
+                filteredAndSortedVolunteers.map((volunteer) => (
                   <tr key={volunteer._id} className="hover:bg-gray-50 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{volunteer.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{volunteer.username}</td>
@@ -232,7 +331,7 @@ function AdminDashboard() {
                   </tr>
                 ))
               ) : (
-                hrs.map((hr) => (
+                filteredAndSortedHRs.map((hr) => (
                   <tr key={hr._id} className="hover:bg-gray-50 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{hr.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hr.company}</td>
@@ -355,50 +454,142 @@ function AdminDashboard() {
       {/* Allocation Modal */}
       {showAllocationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-8 w-96">
+          <div className="bg-white rounded-xl p-8 w-[500px]">
             <h3 className="text-xl font-semibold mb-6">Allocate Volunteer to HR</h3>
             <div className="space-y-4">
+              {/* Volunteer Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Volunteer</label>
-                <select
-                  value={selectedVolunteer}
-                  onChange={(e) => setSelectedVolunteer(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="">Choose a volunteer</option>
-                  {volunteers.map((volunteer) => (
-                    <option key={volunteer._id} value={volunteer._id}>
-                      {volunteer.name}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search and Select Volunteer</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Type to search volunteers..."
+                    onChange={(e) => {
+                      const searchTerm = e.target.value.toLowerCase();
+                      // Update volunteer search term but don't auto-select
+                      setVolunteerSearch(searchTerm);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  {/* Filtered Volunteer Dropdown */}
+                  {volunteerSearch && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      {volunteers
+                        .filter(v => 
+                          v.name.toLowerCase().includes(volunteerSearch) || 
+                          v.username.toLowerCase().includes(volunteerSearch)
+                        )
+                        .map(volunteer => (
+                          <div
+                            key={volunteer._id}
+                            onClick={() => {
+                              setSelectedVolunteer(volunteer._id);
+                              setVolunteerSearch('');
+                            }}
+                            className={`px-4 py-2 cursor-pointer hover:bg-purple-50 ${
+                              selectedVolunteer === volunteer._id ? 'bg-purple-100' : ''
+                            }`}
+                          >
+                            {volunteer.name} ({volunteer.username})
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                {/* Selected Volunteer Display */}
+                {selectedVolunteer && (
+                  <div className="mt-2 p-2 bg-purple-50 rounded-lg flex justify-between items-center">
+                    <span className="text-sm text-purple-700">
+                      Selected: {volunteers.find(v => v._id === selectedVolunteer)?.name}
+                    </span>
+                    <button
+                      onClick={() => setSelectedVolunteer('')}
+                      className="text-purple-700 hover:text-purple-900"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* HR Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select HR</label>
-                <select
-                  value={selectedHR}
-                  onChange={(e) => setSelectedHR(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="">Choose an HR</option>
-                  {hrs.map((hr) => (
-                    <option key={hr._id} value={hr._id}>
-                      {hr.name} - {hr.company}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search and Select HR</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Type to search HRs..."
+                    onChange={(e) => {
+                      const searchTerm = e.target.value.toLowerCase();
+                      // Update HR search term but don't auto-select
+                      setHrSearch(searchTerm);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  {/* Filtered HR Dropdown */}
+                  {hrSearch && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      {hrs
+                        .filter(hr => 
+                          hr.name.toLowerCase().includes(hrSearch) || 
+                          hr.company.toLowerCase().includes(hrSearch)
+                        )
+                        .map(hr => (
+                          <div
+                            key={hr._id}
+                            onClick={() => {
+                              setSelectedHR(hr._id);
+                              setHrSearch('');
+                            }}
+                            className={`px-4 py-2 cursor-pointer hover:bg-purple-50 ${
+                              selectedHR === hr._id ? 'bg-purple-100' : ''
+                            }`}
+                          >
+                            {hr.name} - {hr.company}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                {/* Selected HR Display */}
+                {selectedHR && (
+                  <div className="mt-2 p-2 bg-purple-50 rounded-lg flex justify-between items-center">
+                    <span className="text-sm text-purple-700">
+                      Selected: {hrs.find(h => h._id === selectedHR)?.name}
+                    </span>
+                    <button
+                      onClick={() => setSelectedHR('')}
+                      className="text-purple-700 hover:text-purple-900"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Action Buttons */}
             <div className="mt-6 flex justify-end space-x-3">
               <button
-                onClick={() => setShowAllocationModal(false)}
+                onClick={() => {
+                  setShowAllocationModal(false);
+                  setSelectedVolunteer('');
+                  setSelectedHR('');
+                  setVolunteerSearch('');
+                  setHrSearch('');
+                }}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAllocate}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                disabled={!selectedVolunteer || !selectedHR}
+                className={`px-4 py-2 text-white rounded-lg ${
+                  !selectedVolunteer || !selectedHR
+                    ? 'bg-purple-400 cursor-not-allowed'
+                    : 'bg-purple-600 hover:bg-purple-700'
+                }`}
               >
                 Allocate
               </button>
