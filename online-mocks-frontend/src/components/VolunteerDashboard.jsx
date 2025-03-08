@@ -373,7 +373,7 @@ function VolunteerDashboard() {
                     S.No
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Register Number
+                    Registration Number
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Name
@@ -382,10 +382,10 @@ function VolunteerDashboard() {
                     Department
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Aptitude Score (out of 50)
+                    Aptitude Score
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    GD Score (out of 50)
+                    GD Score
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Actions

@@ -168,6 +168,29 @@ function HRDashboard() {
   };
 
   const handleSubmitReview = async () => {
+    // Check if all required fields are filled
+    const requiredFields = [
+      'professionalAppearanceAndAttitude',
+      'managerialAptitude',
+      'generalIntelligenceAndAwareness',
+      'technicalKnowledge',
+      'communicationSkills',
+      'achievementsAndAmbition',
+      'selfConfidence',
+      'overallScore',
+      'strengths',
+      'pointsToImproveOn',
+      'comments'
+    ];
+
+    const missingFields = requiredFields.filter(field => !reviewData[field]);
+    
+    if (missingFields.length > 0) {
+      setErrorMessage('Please fill in all required fields before submitting.');
+      setShowErrorModal(true);
+      return;
+    }
+
     try {
       setSubmitting(true);
       await api.post("/api/hr/personalReport", {
@@ -177,14 +200,11 @@ function HRDashboard() {
       });
       setShowReviewModal(false);
       setSubmitting(false);
-      // Refresh student data
       const studentsResponse = await api.get("/api/hr/getStudents");
       setStudents(studentsResponse.data);
     } catch (error) {
       console.error("Error submitting review:", error);
-      setErrorMessage(
-        error.response?.data?.message || "Failed to submit review"
-      );
+      setErrorMessage(error.response?.data?.message || "Failed to submit review");
       setShowErrorModal(true);
       setSubmitting(false);
     }
@@ -310,6 +330,38 @@ function HRDashboard() {
         </svg>
       );
     }
+  };
+
+  const StarRating = ({ name, value, onChange, label }) => {
+    return (
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label} <span className="text-red-500">*</span>
+        </label>
+        <div className="flex items-center space-x-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => onChange({ target: { name, value: star * 2 } })}
+              className="focus:outline-none transition-transform hover:scale-110"
+            >
+              <svg
+                className={`w-8 h-8 ${
+                  star <= value / 2
+                    ? 'text-yellow-400'
+                    : 'text-gray-300'
+                } transition-colors duration-150`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -566,15 +618,13 @@ function HRDashboard() {
                         )}
                         <button
                           onClick={() => handleReviewStudent(student)}
-                          className={`flex-1 ${
+                          className={`${
                             hasReviewedStudent(student)
                               ? "bg-green-500 hover:bg-green-600"
                               : "bg-blue-500 hover:bg-blue-600"
                           } text-white px-4 py-2 rounded-lg transform hover:-translate-y-0.5 transition-all duration-200`}
                         >
-                          {hasReviewedStudent(student)
-                            ? "Edit Review"
-                            : "Review"}
+                          {hasReviewedStudent(student) ? "Edit Grade" : "Grade"}
                         </button>
                       </div>
                     </div>
@@ -688,10 +738,10 @@ function HRDashboard() {
                       <th
                         className="w-[15%] px-2 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors duration-150 group"
                         onClick={() => requestSort("registerNumber")}
-                        title="Click to sort by Register Number"
+                        title="Click to sort by Registration Number"
                       >
                         <div className="flex items-center justify-center">
-                          <span className="truncate">Register Number</span>{" "}
+                          <span className="truncate">Registration Number</span>{" "}
                           {getSortDirectionIndicator("registerNumber")}
                         </div>
                       </th>
@@ -811,9 +861,7 @@ function HRDashboard() {
                                   : "bg-blue-500 hover:bg-blue-600"
                               } text-white px-2 py-1.5 rounded-lg transform hover:-translate-y-0.5 transition-all duration-200 w-full text-xs md:text-sm`}
                             >
-                              {hasReviewedStudent(student)
-                                ? "Edit Review"
-                                : "Review"}
+                              {hasReviewedStudent(student) ? "Edit Grade" : "Grade"}
                             </button>
                           </td>
                         </tr>
@@ -893,227 +941,67 @@ function HRDashboard() {
 
                 {/* Rating Fields */}
                 <div className="space-y-6">
-                  {/* Professional Appearance */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Professional Appearance & Attitude
-                      </label>
-                    </div>
-                    <select
-                      name="professionalAppearanceAndAttitude"
-                      value={reviewData.professionalAppearanceAndAttitude}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - All Others</option>
-                      <option value={3}>3 - All Others</option>
-                      <option value={2}>2 - All Others</option>
-                      <option value={1}>1 - All Others</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="professionalAppearanceAndAttitude"
+                    value={reviewData.professionalAppearanceAndAttitude}
+                    onChange={handleInputChange}
+                    label="Professional Appearance & Attitude"
+                  />
 
-                  {/* Managerial Aptitude */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Managerial Aptitude
-                      </label>
-                    </div>
-                    <select
-                      name="managerialAptitude"
-                      value={reviewData.managerialAptitude}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - Below Average</option>
-                      <option value={3}>3 - Below Average</option>
-                      <option value={2}>2 - Below Average</option>
-                      <option value={1}>1 - Below Average</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="managerialAptitude"
+                    value={reviewData.managerialAptitude}
+                    onChange={handleInputChange}
+                    label="Managerial Aptitude"
+                  />
 
-                  {/* General Intelligence */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        General Intelligence & Awareness
-                      </label>
-                    </div>
-                    <select
-                      name="generalIntelligenceAndAwareness"
-                      value={reviewData.generalIntelligenceAndAwareness}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - Below Average</option>
-                      <option value={3}>3 - Below Average</option>
-                      <option value={2}>2 - Below Average</option>
-                      <option value={1}>1 - Below Average</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="generalIntelligenceAndAwareness"
+                    value={reviewData.generalIntelligenceAndAwareness}
+                    onChange={handleInputChange}
+                    label="General Intelligence & Awareness"
+                  />
 
-                  {/* Technical Knowledge */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Technical Knowledge
-                      </label>
-                    </div>
-                    <select
-                      name="technicalKnowledge"
-                      value={reviewData.technicalKnowledge}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - Below Average</option>
-                      <option value={3}>3 - Below Average</option>
-                      <option value={2}>2 - Below Average</option>
-                      <option value={1}>1 - Below Average</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="technicalKnowledge"
+                    value={reviewData.technicalKnowledge}
+                    onChange={handleInputChange}
+                    label="Technical Knowledge"
+                  />
 
-                  {/* Communication Skills */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Communication Skills
-                      </label>
-                    </div>
-                    <select
-                      name="communicationSkills"
-                      value={reviewData.communicationSkills}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - Below Average</option>
-                      <option value={3}>3 - Below Average</option>
-                      <option value={2}>2 - Below Average</option>
-                      <option value={1}>1 - Below Average</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="communicationSkills"
+                    value={reviewData.communicationSkills}
+                    onChange={handleInputChange}
+                    label="Communication Skills"
+                  />
 
-                  {/* Achievements & Ambition */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Achievements & Ambition
-                      </label>
-                    </div>
-                    <select
-                      name="achievementsAndAmbition"
-                      value={reviewData.achievementsAndAmbition}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - Below Average</option>
-                      <option value={3}>3 - Below Average</option>
-                      <option value={2}>2 - Below Average</option>
-                      <option value={1}>1 - Below Average</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="achievementsAndAmbition"
+                    value={reviewData.achievementsAndAmbition}
+                    onChange={handleInputChange}
+                    label="Achievements & Ambition"
+                  />
 
-                  {/* Self Confidence */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Self Confidence
-                      </label>
-                    </div>
-                    <select
-                      name="selfConfidence"
-                      value={reviewData.selfConfidence}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - Below Average</option>
-                      <option value={3}>3 - Below Average</option>
-                      <option value={2}>2 - Below Average</option>
-                      <option value={1}>1 - Below Average</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="selfConfidence"
+                    value={reviewData.selfConfidence}
+                    onChange={handleInputChange}
+                    label="Self Confidence"
+                  />
 
-                  {/* Overall Score */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Overall Score
-                      </label>
-                    </div>
-                    <select
-                      name="overallScore"
-                      value={reviewData.overallScore}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Rating --</option>
-                      <option value={10}>10 - Outstanding</option>
-                      <option value={9}>9 - Outstanding</option>
-                      <option value={8}>8 - Above Average</option>
-                      <option value={7}>7 - Above Average</option>
-                      <option value={6}>6 - Above Average</option>
-                      <option value={5}>5 - Average</option>
-                      <option value={4}>4 - Below Average</option>
-                      <option value={3}>3 - Below Average</option>
-                      <option value={2}>2 - Below Average</option>
-                      <option value={1}>1 - Below Average</option>
-                    </select>
-                  </div>
+                  <StarRating
+                    name="overallScore"
+                    value={reviewData.overallScore}
+                    onChange={handleInputChange}
+                    label="Overall Score"
+                  />
 
                   {/* Text Fields */}
                   <div className="space-y-4 mt-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Strengths
+                        Strengths <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="strengths"
@@ -1122,12 +1010,13 @@ function HRDashboard() {
                         rows="3"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Student's strengths..."
+                        required
                       ></textarea>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Points to Improve On
+                        Points to Improve On <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="pointsToImproveOn"
@@ -1136,12 +1025,13 @@ function HRDashboard() {
                         rows="3"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Areas for improvement..."
+                        required
                       ></textarea>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Additional Comments
+                        Additional Comments <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="comments"
@@ -1150,6 +1040,7 @@ function HRDashboard() {
                         rows="3"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Any additional comments..."
+                        required
                       ></textarea>
                     </div>
                   </div>

@@ -28,6 +28,9 @@ function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'allocated', 'not-allocated'
   const [volunteerSearch, setVolunteerSearch] = useState("");
   const [hrSearch, setHrSearch] = useState("");
+  const [showEditStudentModal, setShowEditStudentModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -74,6 +77,13 @@ function AdminDashboard() {
 
   const handleAllocate = async () => {
     try {
+      // Check if HR already has a volunteer
+      const hr = hrs.find(h => h._id === selectedHR);
+      if (hr.allocatedVolunteers && hr.allocatedVolunteers.length > 0) {
+        alert('This HR already has a volunteer allocated.');
+        return;
+      }
+
       await api.post("/api/admin/allocate", {
         volunteerId: selectedVolunteer,
         hrId: selectedHR,
@@ -173,6 +183,10 @@ function AdminDashboard() {
     }
   };
 
+  const checkHRAllocationLimit = (student) => {
+    return student.allocatedHRs && student.allocatedHRs.length >= 3;
+  };
+
   const filteredAndSortedHRs = hrs
     .filter((hr) => {
       const matchesSearch =
@@ -207,6 +221,38 @@ function AdminDashboard() {
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
     });
+
+  const handleEditStudent = (student) => {
+    setEditingStudent(student);
+    setShowEditStudentModal(true);
+  };
+
+  const handleUpdateStudent = async () => {
+    try {
+      await api.put(`/api/admin/update-student/${editingStudent._id}`, editingStudent);
+      
+      // Update the students list
+      const updatedStudents = students.map(student => 
+        student._id === editingStudent._id ? editingStudent : student
+      );
+      setStudents(updatedStudents);
+      
+      setShowEditStudentModal(false);
+      setEditingStudent(null);
+    } catch (error) {
+      console.error('Error updating student:', error);
+      alert(error.response?.data?.message || 'Error updating student');
+    }
+  };
+
+  // Add this function to sort students
+  const sortedStudents = [...students].sort((a, b) => {
+    const aValue = a[sortField]?.toLowerCase() || "";
+    const bValue = b[sortField]?.toLowerCase() || "";
+    return sortOrder === "asc"
+      ? aValue.localeCompare(bValue)
+      : bValue.localeCompare(aValue);
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -349,8 +395,11 @@ function AdminDashboard() {
                     <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
                       Name
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Department
+                    <th
+                      onClick={() => handleSort("department")}
+                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                    >
+                      Department {sortField === "department" && (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
                       Aptitude Score
@@ -414,7 +463,7 @@ function AdminDashboard() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {activeTab === "students"
-                ? students.map((student) => (
+                ? sortedStudents.map((student) => (
                     <tr
                       key={student._id}
                       className="hover:bg-gray-50 transition-colors duration-150"
@@ -636,12 +685,9 @@ function AdminDashboard() {
                   } username`}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
+              <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={newEntry.password}
                   onChange={(e) =>
                     setNewEntry({ ...newEntry, password: e.target.value })
@@ -649,6 +695,13 @@ function AdminDashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Enter password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
               </div>
               {activeTab === "hrs" && (
                 <div>
@@ -848,6 +901,78 @@ function AdminDashboard() {
                 }`}
               >
                 Allocate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {showEditStudentModal && editingStudent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-96 transform transition-all duration-200">
+            <h3 className="text-xl font-semibold text-gray-800 mb-6">
+              Edit Student Details
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={editingStudent.name}
+                  onChange={(e) => setEditingStudent({
+                    ...editingStudent,
+                    name: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={editingStudent.department}
+                  onChange={(e) => setEditingStudent({
+                    ...editingStudent,
+                    department: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Resume Link
+                </label>
+                <input
+                  type="text"
+                  value={editingStudent.resumeLink || ''}
+                  onChange={(e) => setEditingStudent({
+                    ...editingStudent,
+                    resumeLink: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowEditStudentModal(false);
+                  setEditingStudent(null);
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateStudent}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              >
+                Update
               </button>
             </div>
           </div>
