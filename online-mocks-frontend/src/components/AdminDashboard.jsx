@@ -78,9 +78,9 @@ function AdminDashboard() {
   const handleAllocate = async () => {
     try {
       // Check if HR already has a volunteer
-      const hr = hrs.find(h => h._id === selectedHR);
+      const hr = hrs.find((h) => h._id === selectedHR);
       if (hr.allocatedVolunteers && hr.allocatedVolunteers.length > 0) {
-        alert('This HR already has a volunteer allocated.');
+        alert("This HR already has a volunteer allocated.");
         return;
       }
 
@@ -229,19 +229,22 @@ function AdminDashboard() {
 
   const handleUpdateStudent = async () => {
     try {
-      await api.put(`/api/admin/update-student/${editingStudent._id}`, editingStudent);
-      
+      await api.put(
+        `/api/admin/update-student/${editingStudent._id}`,
+        editingStudent
+      );
+
       // Update the students list
-      const updatedStudents = students.map(student => 
+      const updatedStudents = students.map((student) =>
         student._id === editingStudent._id ? editingStudent : student
       );
       setStudents(updatedStudents);
-      
+
       setShowEditStudentModal(false);
       setEditingStudent(null);
     } catch (error) {
-      console.error('Error updating student:', error);
-      alert(error.response?.data?.message || 'Error updating student');
+      console.error("Error updating student:", error);
+      alert(error.response?.data?.message || "Error updating student");
     }
   };
 
@@ -355,7 +358,7 @@ function AdminDashboard() {
               type="text"
               placeholder={`Search ${
                 activeTab === "students"
-                  ? "students by name or allocated HR..."
+                  ? "students by name, register number or allocated HR..."
                   : "..."
               }`}
               value={searchTerm}
@@ -384,130 +387,200 @@ function AdminDashboard() {
 
         {/* Data Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mt-6">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-purple-500 to-purple-600">
-              <tr>
-                {activeTab === "students" ? (
-                  <>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Register Number
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th
-                      onClick={() => handleSort("department")}
-                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
-                    >
-                      Department {sortField === "department" && (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Aptitude Score
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      GD Score
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Allocated HRs
-                    </th>
-                  </>
-                ) : activeTab === "volunteers" ? (
-                  <>
-                    <th
-                      onClick={() => handleSort("name")}
-                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
-                    >
-                      Name{" "}
-                      {sortField === "name" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th
-                      onClick={() => handleSort("username")}
-                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
-                    >
-                      Username{" "}
-                      {sortField === "username" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </>
-                ) : (
-                  <>
-                    <th
-                      onClick={() => handleSort("name")}
-                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
-                    >
-                      Name{" "}
-                      {sortField === "name" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th
-                      onClick={() => handleSort("company")}
-                      className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
-                    >
-                      Company{" "}
-                      {sortField === "company" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Allocated Volunteers
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </>
-                )}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {activeTab === "students"
-                ? sortedStudents.map((student) => (
-                    <tr
-                      key={student._id}
-                      className="hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {student.registerNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.department}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.aptitudeScore}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.gdScore}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {student.allocatedHRs &&
-                        student.allocatedHRs.length > 0 ? (
-                          <div className="space-y-2">
-                            {student.allocatedHRs.map((hr) => (
-                              <div
-                                key={hr._id}
-                                className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
-                              >
-                                <span>
-                                  {hr.name} ({hr.company})
-                                </span>
-                                {student.personalReport.some(
-                                  (report) =>
-                                    report.hrId.toString() === hr._id.toString()
-                                ) ? (
-                                  <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">
-                                    Reviewed
+          <div className="overflow-x-auto">
+            <table className="min-w-[1200px] w-full divide-y divide-gray-200">
+              <thead className="bg-gradient-to-r from-purple-500 to-purple-600">
+                <tr>
+                  {activeTab === "students" ? (
+                    <>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider w-32">
+                        Registration Number
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider w-40">
+                        Name
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider w-32">
+                        Department
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider w-28">
+                        Aptitude Score
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider w-24">
+                        GD Score
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider w-32">
+                        Interviews Attended
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        Allocated HRs
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider w-24">
+                        Actions
+                      </th>
+                    </>
+                  ) : activeTab === "volunteers" ? (
+                    <>
+                      <th
+                        onClick={() => handleSort("name")}
+                        className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                      >
+                        Name{" "}
+                        {sortField === "name" &&
+                          (sortOrder === "asc" ? "↑" : "↓")}
+                      </th>
+                      <th
+                        onClick={() => handleSort("username")}
+                        className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                      >
+                        Username{" "}
+                        {sortField === "username" &&
+                          (sortOrder === "asc" ? "↑" : "↓")}
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        Allocated HRs
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </>
+                  ) : (
+                    <>
+                      <th
+                        onClick={() => handleSort("name")}
+                        className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                      >
+                        Name{" "}
+                        {sortField === "name" &&
+                          (sortOrder === "asc" ? "↑" : "↓")}
+                      </th>
+                      <th
+                        onClick={() => handleSort("company")}
+                        className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                      >
+                        Company{" "}
+                        {sortField === "company" &&
+                          (sortOrder === "asc" ? "↑" : "↓")}
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                        Allocated Volunteers
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {activeTab === "students"
+                  ? sortedStudents.map((student) => (
+                      <tr
+                        key={student._id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {student.registerNumber}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.department}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.aptitudeScore}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.gdScore}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.personalReport
+                            ? student.personalReport.length
+                            : 0}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {student.allocatedHRs &&
+                          student.allocatedHRs.length > 0 ? (
+                            <div className="space-y-2">
+                              {student.allocatedHRs.map((hr) => (
+                                <div
+                                  key={hr._id}
+                                  className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
+                                >
+                                  <span>
+                                    {hr.name} ({hr.company})
                                   </span>
-                                ) : (
+                                  {student.personalReport.some(
+                                    (report) =>
+                                      report.hrId.toString() ===
+                                      hr._id.toString()
+                                  ) ? (
+                                    <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">
+                                      Reviewed
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() =>
+                                        handleDeallocateHRFromStudent(
+                                          student._id,
+                                          hr._id,
+                                          hr.name
+                                        )
+                                      }
+                                      className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-2 py-1 rounded-md text-xs transition-colors duration-150"
+                                    >
+                                      Deallocate
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              No HRs allocated
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleEditStudent(student)}
+                            className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors duration-150 mr-2"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  : activeTab === "volunteers"
+                  ? filteredAndSortedVolunteers.map((volunteer) => (
+                      <tr
+                        key={volunteer._id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {volunteer.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {volunteer.username}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {volunteer.assignedHRs &&
+                          volunteer.assignedHRs.length > 0 ? (
+                            <div className="space-y-2">
+                              {volunteer.assignedHRs.map((hr) => (
+                                <div
+                                  key={hr._id}
+                                  className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
+                                >
+                                  <span>
+                                    {hr.name} ({hr.company})
+                                  </span>
                                   <button
                                     onClick={() =>
-                                      handleDeallocateHRFromStudent(
-                                        student._id,
+                                      handleDeallocate(
                                         hr._id,
+                                        volunteer._id,
+                                        volunteer.name,
                                         hr.name
                                       )
                                     }
@@ -515,100 +588,86 @@ function AdminDashboard() {
                                   >
                                     Deallocate
                                   </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            No HRs allocated
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                : activeTab === "volunteers"
-                ? filteredAndSortedVolunteers.map((volunteer) => (
-                    <tr
-                      key={volunteer._id}
-                      className="hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {volunteer.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {volunteer.username}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() =>
-                            handleDelete(volunteer._id, volunteer.name)
-                          }
-                          className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                : filteredAndSortedHRs.map((hr) => (
-                    <tr
-                      key={hr._id}
-                      className="hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {hr.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {hr.company}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {hr.allocatedVolunteers &&
-                        hr.allocatedVolunteers.length > 0 ? (
-                          <div className="space-y-2">
-                            {hr.allocatedVolunteers.map((volunteer) => (
-                              <div
-                                key={volunteer._id}
-                                className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
-                              >
-                                <span>
-                                  {volunteer.name} ({volunteer.username})
-                                </span>
-                                <button
-                                  onClick={() => {
-                                    console.log("Volunteer data:", volunteer); // Debug log
-                                    handleDeallocate(
-                                      hr._id,
-                                      volunteer._id || volunteer, // If volunteer is just an ID, use it directly
-                                      volunteer.name,
-                                      hr.name
-                                    );
-                                  }}
-                                  className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-2 py-1 rounded-md text-xs transition-colors duration-150"
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              No HRs allocated
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() =>
+                              handleDelete(volunteer._id, volunteer.name)
+                            }
+                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  : filteredAndSortedHRs.map((hr) => (
+                      <tr
+                        key={hr._id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {hr.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {hr.company}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {hr.allocatedVolunteers &&
+                          hr.allocatedVolunteers.length > 0 ? (
+                            <div className="space-y-2">
+                              {hr.allocatedVolunteers.map((volunteer) => (
+                                <div
+                                  key={volunteer._id}
+                                  className="flex items-center justify-between bg-gray-50 p-2 rounded-lg"
                                 >
-                                  Deallocate
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            No volunteers allocated
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleDelete(hr._id, hr.name)}
-                          className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-            </tbody>
-          </table>
+                                  <span>
+                                    {volunteer.name} ({volunteer.username})
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      console.log("Volunteer data:", volunteer); // Debug log
+                                      handleDeallocate(
+                                        hr._id,
+                                        volunteer._id || volunteer, // If volunteer is just an ID, use it directly
+                                        volunteer.name,
+                                        hr.name
+                                      );
+                                    }}
+                                    className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 px-2 py-1 rounded-md text-xs transition-colors duration-150"
+                                  >
+                                    Deallocate
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              No volunteers allocated
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleDelete(hr._id, hr.name)}
+                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}
@@ -919,29 +978,17 @@ function AdminDashboard() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name
                 </label>
-                <input
-                  type="text"
-                  value={editingStudent.name}
-                  onChange={(e) => setEditingStudent({
-                    ...editingStudent,
-                    name: e.target.value
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+                <div className="w-full px-3 py-2 border border-gray-100 rounded-lg bg-gray-50 text-gray-700">
+                  {editingStudent.name}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Department
+                  Registration Number
                 </label>
-                <input
-                  type="text"
-                  value={editingStudent.department}
-                  onChange={(e) => setEditingStudent({
-                    ...editingStudent,
-                    department: e.target.value
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+                <div className="w-full px-3 py-2 border border-gray-100 rounded-lg bg-gray-50 text-gray-700">
+                  {editingStudent.registerNumber}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -949,11 +996,14 @@ function AdminDashboard() {
                 </label>
                 <input
                   type="text"
-                  value={editingStudent.resumeLink || ''}
-                  onChange={(e) => setEditingStudent({
-                    ...editingStudent,
-                    resumeLink: e.target.value
-                  })}
+                  value={editingStudent.resumeLink || ""}
+                  onChange={(e) =>
+                    setEditingStudent({
+                      ...editingStudent,
+                      resumeLink: e.target.value,
+                    })
+                  }
+                  placeholder="Enter resume link"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>

@@ -133,10 +133,10 @@ router.post(
         });
       }
 
-      // Check if student already has 2 or more HRs allocated
-      if (student.allocatedHRs.length >= 2) {
+      // Check if student already has 3 or more HRs allocated
+      if (student.allocatedHRs.length >= 3) {
         return res.status(400).json({
-          message: "Student cannot be allocated to more than 2 HRs",
+          message: "Student cannot be allocated to more than 3 HRs",
         });
       }
 

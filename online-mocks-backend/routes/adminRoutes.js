@@ -21,9 +21,41 @@ router.post("/login", async (req, res) => {
 
 router.get("/volunteers", auth, checkRole(["admin"]), async (req, res) => {
   try {
+    // First get all volunteers
     const volunteers = await Volunteer.find().select("-password");
-    res.json(volunteers);
+
+    // Then get all HRs and create a map of volunteer IDs to their assigned HRs
+    const hrs = await HR.find().populate(
+      "allocatedVolunteers",
+      "name username _id"
+    );
+
+    // Create a map of volunteer ID to their assigned HRs
+    const volunteerToHRMap = new Map();
+    hrs.forEach((hr) => {
+      hr.allocatedVolunteers.forEach((volunteer) => {
+        if (!volunteerToHRMap.has(volunteer._id.toString())) {
+          volunteerToHRMap.set(volunteer._id.toString(), []);
+        }
+        volunteerToHRMap.get(volunteer._id.toString()).push({
+          _id: hr._id,
+          name: hr.name,
+          company: hr.company,
+        });
+      });
+    });
+
+    // Add assignedHRs to each volunteer
+    const volunteersWithHRs = volunteers.map((volunteer) => {
+      const volunteerObj = volunteer.toObject();
+      volunteerObj.assignedHRs =
+        volunteerToHRMap.get(volunteer._id.toString()) || [];
+      return volunteerObj;
+    });
+
+    res.json(volunteersWithHRs);
   } catch (error) {
+    console.error("Error fetching volunteers:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
@@ -281,6 +313,32 @@ router.post(
       res.json({ message: "HR deallocated successfully from student" });
     } catch (error) {
       console.error("Error deallocating HR from student:", error);
+      res.status(500).json({ message: "Server Error" });
+    }
+  }
+);
+
+// Update student route
+router.put(
+  "/update-student/:id",
+  auth,
+  checkRole(["admin"]),
+  async (req, res) => {
+    try {
+      const { resumeLink } = req.body;
+      const student = await Student.findById(req.params.id);
+
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Only update the resume link
+      student.resumeLink = resumeLink;
+      await student.save();
+
+      res.json(student);
+    } catch (error) {
+      console.error("Error updating student:", error);
       res.status(500).json({ message: "Server Error" });
     }
   }

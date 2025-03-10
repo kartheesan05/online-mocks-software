@@ -93,4 +93,9 @@ studentSchema.path("personalReport").validate(function (personalReports) {
   return uniqueHrIds.length === hrIds.length;
 }, "A student can have only one personal report per HR");
 
+// Add virtual field for interviews attended count
+studentSchema.virtual("interviewsAttended").get(function () {
+  return this.personalReport.length;
+});
+
 module.exports = mongoose.model("Student", studentSchema);
