@@ -595,12 +595,22 @@ function HRDashboard() {
                         <div>
                           <span className="text-gray-500">Aptitude:</span>
                           <p className="font-medium">
-                            {student.aptitudeScore}/50
+                            {student.aptitudeScore === -1 ? (
+                              <span className="text-red-500">Absent</span>
+                            ) : (
+                              `${student.aptitudeScore}/50`
+                            )}
                           </p>
                         </div>
                         <div>
                           <span className="text-gray-500">GD Score:</span>
-                          <p className="font-medium">{student.gdScore}/50</p>
+                          <p className="font-medium">
+                            {student.gdScore === -1 ? (
+                              <span className="text-red-500">Absent</span>
+                            ) : (
+                              `${student.gdScore}/50`
+                            )}
+                          </p>
                         </div>
                       </div>
 
@@ -834,10 +844,18 @@ function HRDashboard() {
                             <div className="truncate">{student.department}</div>
                           </td>
                           <td className="px-2 py-3 text-sm text-gray-600 text-center">
-                            {student.aptitudeScore}/50
+                            {student.aptitudeScore === -1 ? (
+                              <span className="text-red-500">Absent</span>
+                            ) : (
+                              `${student.aptitudeScore}/50`
+                            )}
                           </td>
                           <td className="px-2 py-3 text-sm text-gray-600 text-center">
-                            {student.gdScore}/50
+                            {student.gdScore === -1 ? (
+                              <span className="text-red-500">Absent</span>
+                            ) : (
+                              `${student.gdScore}/50`
+                            )}
                           </td>
                           <td className="px-2 py-3 text-sm text-center">
                             {student.resumeLink ? (

@@ -574,10 +574,18 @@ function AdminDashboard() {
                           {student.department}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {student.aptitudeScore}
+                          {student.aptitudeScore === -1 ? (
+                            <span className="text-red-500">Absent</span>
+                          ) : (
+                            student.aptitudeScore
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {student.gdScore}
+                          {student.gdScore === -1 ? (
+                            <span className="text-red-500">Absent</span>
+                          ) : (
+                            student.gdScore
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {student.personalReport
