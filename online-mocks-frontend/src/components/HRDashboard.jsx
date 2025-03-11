@@ -13,14 +13,12 @@ function HRDashboard() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [reviewData, setReviewData] = useState({
-    professionalAppearanceAndAttitude: "",
-    managerialAptitude: "",
-    generalIntelligenceAndAwareness: "",
-    technicalKnowledge: "",
-    communicationSkills: "",
-    achievementsAndAmbition: "",
     selfConfidence: "",
-    overallScore: "",
+    communicationSkills: "",
+    technicalKnowledge: "",
+    generalIntelligence: "",
+    managerialCompetence: "",
+    professionalAppearance: "",
     strengths: "",
     pointsToImproveOn: "",
     comments: "",
@@ -113,16 +111,12 @@ function HRDashboard() {
       // If there's an existing review, load it for editing
       setIsEditMode(true);
       setReviewData({
-        professionalAppearanceAndAttitude:
-          existingReview.professionalAppearanceAndAttitude || "",
-        managerialAptitude: existingReview.managerialAptitude || "",
-        generalIntelligenceAndAwareness:
-          existingReview.generalIntelligenceAndAwareness || "",
-        technicalKnowledge: existingReview.technicalKnowledge || "",
-        communicationSkills: existingReview.communicationSkills || "",
-        achievementsAndAmbition: existingReview.achievementsAndAmbition || "",
         selfConfidence: existingReview.selfConfidence || "",
-        overallScore: existingReview.overallScore || "",
+        communicationSkills: existingReview.communicationSkills || "",
+        technicalKnowledge: existingReview.technicalKnowledge || "",
+        generalIntelligence: existingReview.generalIntelligence || "",
+        managerialCompetence: existingReview.managerialCompetence || "",
+        professionalAppearance: existingReview.professionalAppearance || "",
         strengths: existingReview.strengths || "",
         pointsToImproveOn: existingReview.pointsToImproveOn || "",
         comments: existingReview.comments || "",
@@ -131,14 +125,12 @@ function HRDashboard() {
       // If there's no existing review, reset the form
       setIsEditMode(false);
       setReviewData({
-        professionalAppearanceAndAttitude: "",
-        managerialAptitude: "",
-        generalIntelligenceAndAwareness: "",
-        technicalKnowledge: "",
-        communicationSkills: "",
-        achievementsAndAmbition: "",
         selfConfidence: "",
-        overallScore: "",
+        communicationSkills: "",
+        technicalKnowledge: "",
+        generalIntelligence: "",
+        managerialCompetence: "",
+        professionalAppearance: "",
         strengths: "",
         pointsToImproveOn: "",
         comments: "",
@@ -153,15 +145,12 @@ function HRDashboard() {
     setReviewData({
       ...reviewData,
       [name]:
-        name.includes("Score") ||
-        name === "professionalAppearanceAndAttitude" ||
-        name === "managerialAptitude" ||
-        name === "generalIntelligenceAndAwareness" ||
-        name === "technicalKnowledge" ||
-        name === "communicationSkills" ||
-        name === "achievementsAndAmbition" ||
         name === "selfConfidence" ||
-        name === "overallScore"
+        name === "communicationSkills" ||
+        name === "technicalKnowledge" ||
+        name === "generalIntelligence" ||
+        name === "managerialCompetence" ||
+        name === "professionalAppearance"
           ? Number(value)
           : value,
     });
@@ -170,14 +159,12 @@ function HRDashboard() {
   const handleSubmitReview = async () => {
     // Check if all required fields are filled
     const requiredFields = [
-      "professionalAppearanceAndAttitude",
-      "managerialAptitude",
-      "generalIntelligenceAndAwareness",
-      "technicalKnowledge",
-      "communicationSkills",
-      "achievementsAndAmbition",
       "selfConfidence",
-      "overallScore",
+      "communicationSkills",
+      "technicalKnowledge",
+      "generalIntelligence",
+      "managerialCompetence",
+      "professionalAppearance",
       "strengths",
       "pointsToImproveOn",
       "comments",
@@ -981,31 +968,10 @@ function HRDashboard() {
                 {/* Rating Fields */}
                 <div className="space-y-6">
                   <StarRating
-                    name="professionalAppearanceAndAttitude"
-                    value={reviewData.professionalAppearanceAndAttitude}
+                    name="selfConfidence"
+                    value={reviewData.selfConfidence}
                     onChange={handleInputChange}
-                    label="Professional Appearance & Attitude"
-                  />
-
-                  <StarRating
-                    name="managerialAptitude"
-                    value={reviewData.managerialAptitude}
-                    onChange={handleInputChange}
-                    label="Managerial Aptitude"
-                  />
-
-                  <StarRating
-                    name="generalIntelligenceAndAwareness"
-                    value={reviewData.generalIntelligenceAndAwareness}
-                    onChange={handleInputChange}
-                    label="General Intelligence & Awareness"
-                  />
-
-                  <StarRating
-                    name="technicalKnowledge"
-                    value={reviewData.technicalKnowledge}
-                    onChange={handleInputChange}
-                    label="Technical Knowledge"
+                    label="Self Confidence"
                   />
 
                   <StarRating
@@ -1016,24 +982,31 @@ function HRDashboard() {
                   />
 
                   <StarRating
-                    name="achievementsAndAmbition"
-                    value={reviewData.achievementsAndAmbition}
+                    name="technicalKnowledge"
+                    value={reviewData.technicalKnowledge}
                     onChange={handleInputChange}
-                    label="Achievements & Ambition"
+                    label="Technical Knowledge"
                   />
 
                   <StarRating
-                    name="selfConfidence"
-                    value={reviewData.selfConfidence}
+                    name="generalIntelligence"
+                    value={reviewData.generalIntelligence}
                     onChange={handleInputChange}
-                    label="Self Confidence"
+                    label="General Intelligence"
                   />
 
                   <StarRating
-                    name="overallScore"
-                    value={reviewData.overallScore}
+                    name="managerialCompetence"
+                    value={reviewData.managerialCompetence}
                     onChange={handleInputChange}
-                    label="Overall Score"
+                    label="Managerial Competence"
+                  />
+
+                  <StarRating
+                    name="professionalAppearance"
+                    value={reviewData.professionalAppearance}
+                    onChange={handleInputChange}
+                    label="Professional Appearance"
                   />
 
                   {/* Text Fields */}

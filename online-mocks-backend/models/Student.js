@@ -33,28 +33,22 @@ const studentSchema = new mongoose.Schema({
   ],
   personalReport: [
     {
-      professionalAppearanceAndAttitude: {
-        type: Number,
-      },
-      managerialAptitude: {
-        type: Number,
-      },
-      generalIntelligenceAndAwareness: {
-        type: Number,
-      },
-      technicalKnowledge: {
+      selfConfidence: {
         type: Number,
       },
       communicationSkills: {
         type: Number,
       },
-      achievementsAndAmbition: {
+      technicalKnowledge: {
         type: Number,
       },
-      selfConfidence: {
+      generalIntelligence: {
         type: Number,
       },
-      overallScore: {
+      managerialCompetence: {
+        type: Number,
+      },
+      professionalAppearance: {
         type: Number,
       },
       strengths: {
