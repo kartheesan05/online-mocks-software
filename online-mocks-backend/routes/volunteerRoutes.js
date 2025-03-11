@@ -87,7 +87,7 @@ router.get(
 router.post(
   "/add-student",
   auth,
-  checkRole(["volunteer"]),
+  checkRole(["volunteer", "admin"]),
   async (req, res) => {
     try {
       const { registerNumber, hrId } = req.body;

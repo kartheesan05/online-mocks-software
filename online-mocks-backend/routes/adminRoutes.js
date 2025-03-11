@@ -357,4 +357,70 @@ router.put(
   }
 );
 
+// Allocate student to HR
+router.post(
+  "/allocate-student",
+  auth,
+  checkRole(["admin"]),
+  async (req, res) => {
+    try {
+      const { registerNumber, hrId } = req.body;
+
+      if (!registerNumber || !hrId) {
+        return res.status(400).json({
+          message: "Register number and HR ID are required",
+        });
+      }
+
+      // Check if student exists
+      const student = await Student.findOne({ registerNumber });
+      if (!student) {
+        return res.status(404).json({
+          message: `Student with register number ${registerNumber} not found`,
+        });
+      }
+
+      // Check if HR exists
+      const hr = await HR.findById(hrId);
+      if (!hr) {
+        return res.status(404).json({
+          message: "HR not found",
+        });
+      }
+
+      // Check if student is already allocated to this HR
+      if (student.allocatedHRs.includes(hrId)) {
+        return res.status(400).json({
+          message: `Student is already allocated to ${hr.name}`,
+        });
+      }
+
+      // Check if student already has 3 or more HRs allocated
+      if (student.allocatedHRs.length >= 3) {
+        return res.status(400).json({
+          message: "Student cannot be allocated to more than 3 HRs",
+        });
+      }
+
+      // Add HR to student's allocations
+      student.allocatedHRs.push(hrId);
+      await student.save();
+
+      // Return complete student details with populated HR info
+      const updatedStudent = await Student.findById(student._id).populate(
+        "allocatedHRs",
+        "name company username"
+      );
+
+      res.json(updatedStudent);
+    } catch (error) {
+      console.error("Allocate student error:", error);
+      res.status(500).json({
+        message: "Server Error",
+        error: error.message,
+      });
+    }
+  }
+);
+
 module.exports = router;

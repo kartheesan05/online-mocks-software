@@ -31,6 +31,10 @@ function AdminDashboard() {
   const [showEditStudentModal, setShowEditStudentModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showStudentHRModal, setShowStudentHRModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedHRForStudent, setSelectedHRForStudent] = useState("");
+  const [isAllocating, setIsAllocating] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -245,6 +249,61 @@ function AdminDashboard() {
     } catch (error) {
       console.error("Error updating student:", error);
       alert(error.response?.data?.message || "Error updating student");
+    }
+  };
+
+  const handleAllocateStudentToHR = async () => {
+    try {
+      if (!selectedStudent || !selectedHRForStudent) {
+        alert("Please enter HR username");
+        return;
+      }
+
+      setIsAllocating(true); // Start loading
+
+      // Find HR by username
+      const hr = hrs.find((hr) => hr.username === selectedHRForStudent.trim());
+      if (!hr) {
+        alert("HR not found with the given username");
+        setIsAllocating(false); // Stop loading on error
+        return;
+      }
+
+      // Check if HR is already allocated to student
+      if (
+        selectedStudent.allocatedHRs &&
+        selectedStudent.allocatedHRs.some(
+          (allocatedHR) => allocatedHR._id === hr._id
+        )
+      ) {
+        alert("This HR is already allocated to the student");
+        setIsAllocating(false); // Stop loading on error
+        return;
+      }
+
+      // Make the API call with the correct data
+      const response = await api.post("/api/admin/allocate-student", {
+        registerNumber: selectedStudent.registerNumber,
+        hrId: hr._id,
+      });
+
+      if (response.data) {
+        // Refresh the students data to get updated allocations
+        await fetchData();
+
+        setShowStudentHRModal(false);
+        setSelectedStudent(null);
+        setSelectedHRForStudent("");
+
+        alert("Student allocated successfully!");
+      }
+    } catch (error) {
+      console.error("Error allocating student to HR:", error);
+      const errorMessage =
+        error.response?.data?.message || "Error allocating student to HR";
+      alert(errorMessage);
+    } finally {
+      setIsAllocating(false); // Stop loading whether successful or not
     }
   };
 
@@ -473,6 +532,14 @@ function AdminDashboard() {
                           (sortOrder === "asc" ? "↑" : "↓")}
                       </th>
                       <th
+                        onClick={() => handleSort("username")}
+                        className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
+                      >
+                        Username{" "}
+                        {sortField === "username" &&
+                          (sortOrder === "asc" ? "↑" : "↓")}
+                      </th>
+                      <th
                         onClick={() => handleSort("company")}
                         className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-purple-700"
                       >
@@ -567,6 +634,15 @@ function AdminDashboard() {
                           >
                             Edit
                           </button>
+                          <button
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setShowStudentHRModal(true);
+                            }}
+                            className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1 rounded-lg transition-colors duration-150"
+                          >
+                            Allocate HR
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -637,6 +713,9 @@ function AdminDashboard() {
                           {hr.name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {hr.username}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {hr.company}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
@@ -674,14 +753,7 @@ function AdminDashboard() {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleDelete(hr._id, hr.name)}
-                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
-                          >
-                            Delete
-                          </button>
-                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"></td>
                       </tr>
                     ))}
               </tbody>
@@ -841,15 +913,21 @@ function AdminDashboard() {
                   <input
                     type="text"
                     placeholder="Type to search volunteers..."
+                    value={
+                      selectedVolunteer
+                        ? volunteers.find((v) => v._id === selectedVolunteer)
+                            ?.name || volunteerSearch
+                        : volunteerSearch
+                    }
                     onChange={(e) => {
                       const searchTerm = e.target.value.toLowerCase();
-                      // Update volunteer search term but don't auto-select
                       setVolunteerSearch(searchTerm);
+                      setSelectedVolunteer(""); // Clear selection when typing
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {/* Filtered Volunteer Dropdown */}
-                  {volunteerSearch && (
+                  {volunteerSearch && !selectedVolunteer && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
                       {volunteers
                         .filter(
@@ -862,7 +940,7 @@ function AdminDashboard() {
                             key={volunteer._id}
                             onClick={() => {
                               setSelectedVolunteer(volunteer._id);
-                              setVolunteerSearch("");
+                              setVolunteerSearch(volunteer.name);
                             }}
                             className={`px-4 py-2 cursor-pointer hover:bg-purple-50 ${
                               selectedVolunteer === volunteer._id
@@ -905,15 +983,21 @@ function AdminDashboard() {
                   <input
                     type="text"
                     placeholder="Type to search HRs..."
+                    value={
+                      selectedHR
+                        ? hrs.find((h) => h._id === selectedHR)?.name ||
+                          hrSearch
+                        : hrSearch
+                    }
                     onChange={(e) => {
                       const searchTerm = e.target.value.toLowerCase();
-                      // Update HR search term but don't auto-select
                       setHrSearch(searchTerm);
+                      setSelectedHR(""); // Clear selection when typing
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {/* Filtered HR Dropdown */}
-                  {hrSearch && (
+                  {hrSearch && !selectedHR && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
                       {hrs
                         .filter(
@@ -926,7 +1010,7 @@ function AdminDashboard() {
                             key={hr._id}
                             onClick={() => {
                               setSelectedHR(hr._id);
-                              setHrSearch("");
+                              setHrSearch(hr.name);
                             }}
                             className={`px-4 py-2 cursor-pointer hover:bg-purple-50 ${
                               selectedHR === hr._id ? "bg-purple-100" : ""
@@ -1042,6 +1126,90 @@ function AdminDashboard() {
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
               >
                 Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Student-HR Allocation Modal */}
+      {showStudentHRModal && selectedStudent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-96 transform transition-all duration-200">
+            <h3 className="text-xl font-semibold text-gray-800 mb-6">
+              Allocate HR to Student
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Student
+                </label>
+                <div className="w-full px-3 py-2 border border-gray-100 rounded-lg bg-gray-50 text-gray-700">
+                  {selectedStudent.name} ({selectedStudent.registerNumber})
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  HR Username
+                </label>
+                <input
+                  type="text"
+                  value={selectedHRForStudent}
+                  onChange={(e) => setSelectedHRForStudent(e.target.value)}
+                  placeholder="Enter HR username"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  disabled={isAllocating}
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowStudentHRModal(false);
+                  setSelectedStudent(null);
+                  setSelectedHRForStudent("");
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                disabled={isAllocating}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAllocateStudentToHR}
+                disabled={!selectedHRForStudent || isAllocating}
+                className={`px-4 py-2 text-white rounded-lg flex items-center justify-center min-w-[100px] ${
+                  !selectedHRForStudent || isAllocating
+                    ? "bg-purple-400 cursor-not-allowed"
+                    : "bg-purple-600 hover:bg-purple-700"
+                }`}
+              >
+                {isAllocating ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Allocating...
+                  </>
+                ) : (
+                  "Allocate"
+                )}
               </button>
             </div>
           </div>
