@@ -412,10 +412,14 @@ function VolunteerDashboard() {
                         {student.department}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                        {student.aptitudeScore} / 50
+                        {student.aptitudeScore === -1
+                          ? "Absent"
+                          : `${student.aptitudeScore} / 50`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                        {student.gdScore} / 50
+                        {student.gdScore === -1
+                          ? "Absent"
+                          : `${student.gdScore} / 50`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                         {hasPersonalReport(student) ? (

@@ -949,13 +949,21 @@ function HRDashboard() {
                     Aptitude Score
                   </p>
                   <p className="text-base text-gray-800">
-                    {selectedStudent.aptitudeScore} / 50
+                    {selectedStudent.aptitudeScore === -1 ? (
+                      <span className="text-red-500">Absent</span>
+                    ) : (
+                      `${selectedStudent.aptitudeScore} / 50`
+                    )}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">GD Score</p>
                   <p className="text-base text-gray-800">
-                    {selectedStudent.gdScore} / 50
+                    {selectedStudent.gdScore === -1 ? (
+                      <span className="text-red-500">Absent</span>
+                    ) : (
+                      `${selectedStudent.gdScore} / 50`
+                    )}
                   </p>
                 </div>
               </div>
